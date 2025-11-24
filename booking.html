@@ -88,7 +88,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // --- Bagian Firebase (Tidak Berubah) ---
+    // --- Konfigurasi Firebase Anda ---
     const firebaseConfig = {
       apiKey: "AIzaSyDsPPXz5YBn140-YHJOhkcc9oipgBgifIg",
       authDomain: "embeddedsystem-21738.firebaseapp.com",
@@ -102,34 +102,47 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // --- Fungsi Kirim Data ke Firebase (Diperbarui) ---
     function kirim() {
-      // ... (Fungsi kirim tetap sama)
-      let id = document.getElementById("id").value.replace(/\s+/g, "").toUpperCase();
+      // Ambil nilai dari input
+      let rawId = document.getElementById("id").value;
+      let id = rawId.replace(/\s+/g, "").toUpperCase(); // ID sebagai Key
       let nik = document.getElementById("nik").value;
       let nama = document.getElementById("nama").value;
-      let kamar = document.getElementById("kamar").value;
+      let kamarValue = document.getElementById("kamar").value;
       let status = document.getElementById("status");
+      
+      let kamarText = "Kamar" + kamarValue; // Contoh: Kamar1
 
-      if (id === "" || nik === "" || nama === "" || kamar === "") {
+      // Validasi Input
+      if (id === "" || nik === "" || nama === "" || kamarValue === "") {
         status.innerHTML = "Semua data harus diisi!";
         status.style.color = "var(--primary-color)";
         return;
       }
-
-      let dataObject = {
-          kamar: "Kamar" + kamar,
-          nik: nik,
-          nama: nama,
-          timestamp: new Date().toISOString()
-      };
       
-      let dataLine = JSON.stringify(dataObject);
+      // Mengubah format nama menjadi huruf kecil seperti yang diminta
+      let namaLowerCase = nama.toLowerCase();
 
+      // MEMBENTUK ARRAY SESUAI PERMINTAAN: [kamar, id\_ktp, nik, nama]
+      let dataArray = [
+          kamarText,
+          id, // ID KTP / Paspor
+          nik,
+          namaLowerCase
+      ];
+
+      // Mengubah Array menjadi STRING JSON
+      // Contoh hasil: "[Kamar1, D238452E, 123456789, handoko]"
+      let dataLine = JSON.stringify(dataArray);
+
+      // Simpan di Firebase dengan ID KTP sebagai key
       db.ref("reservasi/" + id).set(dataLine)
         .then(() => {
           status.innerHTML = "Registrasi Kamar Berhasil! ID Anda: " + id;
           status.style.color = "green";
 
+          // Reset Form
           document.getElementById("id").value = "";
           document.getElementById("nik").value = "";
           document.getElementById("nama").value = "";
@@ -141,13 +154,11 @@
         });
     }
 
-    // --- Bagian NFC (Baru) ---
-
+    // --- Fungsi Scan NFC (Menghilangkan titik dua) ---
     async function scanNFC() {
       const nfcStatus = document.getElementById('nfc-status');
       const idInput = document.getElementById('id');
 
-      // 1. Cek Kompatibilitas
       if (!('NDEFReader' in window)) {
         nfcStatus.innerHTML = '<span style="color: red;">Perhatian: Web NFC tidak didukung di perangkat atau browser ini.</span>';
         nfcStatus.style.color = 'red';
@@ -159,34 +170,30 @@
         nfcStatus.style.color = 'blue';
 
         const ndef = new NDEFReader();
-        
-        // Memulai proses scan
         await ndef.scan();
 
-        // 2. Event Listener saat Kartu Terdeteksi
         ndef.onreading = event => {
-          // Asumsi: UID atau serial number disimpan sebagai ID KTP
-          // Di Web NFC API standar, ID unik dari tag (serial number/UID) bisa diakses melalui event.serialNumber
-          const serialNumber = event.serialNumber.toUpperCase();
-
-          if (serialNumber) {
-            idInput.value = serialNumber;
+          const rawSerialNumber = event.serialNumber;
+          
+          let cleanID = '';
+          if (rawSerialNumber) {
+            // Hapus semua karakter titik dua (:) dan ubah ke huruf besar
+            cleanID = rawSerialNumber.replace(/:/g, "").toUpperCase(); 
+            
+            idInput.value = cleanID;
             nfcStatus.innerHTML = '<span style="color: green;">✔ Scan Berhasil! ID KTP terisi otomatis.</span>';
-            ndef.onreading = null; // Hentikan listening setelah berhasil
+            ndef.onreading = null;
           } else {
-             // Fallback jika serialNumber tidak terdeteksi (meskipun kartu terbaca)
             idInput.value = '';
             nfcStatus.innerHTML = '<span style="color: orange;">Scan berhasil, namun tidak dapat membaca serial number.</span>';
           }
         };
 
-        // 3. Event Listener untuk Error
         ndef.onerror = error => {
           nfcStatus.innerHTML = `<span style="color: red;">Error NFC: ${error.message}</span>`;
         };
 
       } catch (error) {
-        // Penanganan error saat mencoba memulai scan (misal: izin ditolak)
         let errorMessage = 'Gagal memulai scanning. Pastikan fitur NFC aktif dan izin diberikan.';
         if (error.name === 'NotAllowedError') {
              errorMessage = 'Izin NFC ditolak oleh pengguna. Mohon izinkan akses NFC.';
