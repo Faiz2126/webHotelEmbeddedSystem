@@ -104,7 +104,6 @@
 
     // --- Fungsi Kirim Data ke Firebase (Diperbarui) ---
     function kirim() {
-      // Ambil nilai dari input
       let rawId = document.getElementById("id").value;
       let id = rawId.replace(/\s+/g, "").toUpperCase(); // ID sebagai Key
       let nik = document.getElementById("nik").value;
@@ -112,37 +111,33 @@
       let kamarValue = document.getElementById("kamar").value;
       let status = document.getElementById("status");
       
-      let kamarText = "Kamar" + kamarValue; // Contoh: Kamar1
-
-      // Validasi Input
+      let kamarText = "Kamar" + kamarValue;
+      
       if (id === "" || nik === "" || nama === "" || kamarValue === "") {
         status.innerHTML = "Semua data harus diisi!";
         status.style.color = "var(--primary-color)";
         return;
       }
       
-      // Mengubah format nama menjadi huruf kecil seperti yang diminta
       let namaLowerCase = nama.toLowerCase();
 
       // MEMBENTUK ARRAY SESUAI PERMINTAAN: [kamar, id\_ktp, nik, nama]
       let dataArray = [
           kamarText,
-          id, // ID KTP / Paspor
+          id, 
           nik,
           namaLowerCase
       ];
 
       // Mengubah Array menjadi STRING JSON
-      // Contoh hasil: "[Kamar1, D238452E, 123456789, handoko]"
       let dataLine = JSON.stringify(dataArray);
 
-      // Simpan di Firebase dengan ID KTP sebagai key
-      db.ref("reservasi/" + id).set(dataLine)
+      // Simpan di Firebase dengan ID KTP sebagai key di level ROOT (Perubahan di sini)
+      db.ref(id).set(dataLine)
         .then(() => {
           status.innerHTML = "Registrasi Kamar Berhasil! ID Anda: " + id;
           status.style.color = "green";
 
-          // Reset Form
           document.getElementById("id").value = "";
           document.getElementById("nik").value = "";
           document.getElementById("nama").value = "";
