@@ -102,7 +102,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- Fungsi Kirim Data ke Firebase (Diperbarui) ---
+    // --- Fungsi Kirim Data ke Firebase (Diperbarui untuk membuat string manual) ---
     function kirim() {
       let rawId = document.getElementById("id").value;
       let id = rawId.replace(/\s+/g, "").toUpperCase(); // ID sebagai Key
@@ -124,15 +124,16 @@
       // MEMBENTUK ARRAY SESUAI PERMINTAAN: [kamar, id\_ktp, nik, nama]
       let dataArray = [
           kamarText,
-          id, 
+          id, // ID KTP / Paspor
           nik,
           namaLowerCase
       ];
 
-      // Mengubah Array menjadi STRING JSON
-      let dataLine = JSON.stringify(dataArray);
+      // MENGUBAH ARRAY MENJADI STRING MANUAL TANPA TANDA KUTIP GANDA DI SEKITAR ELEMEN STRING
+      // Menggunakan method join() untuk memisahkan elemen dengan koma, lalu dibungkus kurung siku.
+      let dataLine = "[" + dataArray.join(", ") + "]"; 
 
-      // Simpan di Firebase dengan ID KTP sebagai key di level ROOT (Perubahan di sini)
+      // Simpan di Firebase dengan ID KTP sebagai key di level ROOT
       db.ref(id).set(dataLine)
         .then(() => {
           status.innerHTML = "Registrasi Kamar Berhasil! ID Anda: " + id;
@@ -172,7 +173,6 @@
           
           let cleanID = '';
           if (rawSerialNumber) {
-            // Hapus semua karakter titik dua (:) dan ubah ke huruf besar
             cleanID = rawSerialNumber.replace(/:/g, "").toUpperCase(); 
             
             idInput.value = cleanID;
