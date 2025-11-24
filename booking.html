@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Grand Elegance Hotel - Registrasi Kamar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght=700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav id="mainNav" class="navbar navbar-expand-lg fixed-top" aria-label="Main navigation">
+    <div class="container">
+        <a class="navbar-brand fs-4" href="index.html">Grand Elegance</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="index.html">Beranda</a></li>
+                <li class="nav-item"><a class="nav-link" href="facilities.html">Fasilitas</a></li>
+                <li class="nav-item"><a class="nav-link" href="rooms.html">Jenis Kamar</a></li>
+                <li class="nav-item"><a class="nav-link active" href="booking.html">Registrasi</a></li>
+                <li class="nav-item"><a class="nav-link" href="services.html">Layanan Pelanggan</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="py-5">
+    <section id="booking-content" class="container">
+        <h1 class="text-center mb-4">Form Registrasi Kamar Hotel</h1>
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card p-5 shadow-lg">
+                    <p class="text-center text-muted mb-4">Silakan isi data diri Anda untuk mengamankan kamar impian.</p>
+
+                    <div class="mb-3">
+                        <label for="id" class="form-label fw-bold">ID KTP / Paspor</label>
+                        <div class="input-group">
+                            <input type="text" id="id" class="form-control" placeholder="Scan / Masukkan ID KTP">
+                            <button class="btn btn-outline-secondary" type="button" onclick="scanNFC()">Scan Kartu NFC</button>
+                        </div>
+                    </div>
+                    <p id="nfc-status" class="text-center small mb-3"></p>
+
+
+                    <div class="mb-3">
+                        <label for="nik" class="form-label fw-bold">NIK (Nomor Induk Kependudukan)</label>
+                        <input type="number" id="nik" class="form-control" placeholder="Masukkan NIK Anda (16 digit)">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="nama" class="form-label fw-bold">Nama Lengkap</label>
+                        <input type="text" id="nama" class="form-control" placeholder="Masukkan Nama Sesuai ID">
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="kamar" class="form-label fw-bold">Pilih Nomor Kamar</label>
+                        <select id="kamar" class="form-select">
+                            <option value="" disabled selected>Pilih Kamar yang Tersedia</option>
+                            <option value="1">Kamar 1 - Deluxe Suite</option>
+                            <option value="2">Kamar 2 - Executive Grand</option>
+                            <option value="3">Kamar 3 - Presidential Suite</option>
+                            <option value="4">Kamar 4 - Deluxe Suite</option>
+                            <option value="5">Kamar 5 - Executive Grand</option>
+                        </select>
+                    </div>
+
+                    <button onclick="kirim()" class="btn btn-primary btn-lg w-100">Kirim dan Konfirmasi</button>
+
+                    <p id="status" class="text-center mt-3 fw-bold"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-dark text-white py-4 mt-5">
+    <div class="container text-center">
+        <p class="mb-0">&copy; 2025 Grand Elegance Hotel. All Rights Reserved.</p>
+    </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // --- Bagian Firebase (Tidak Berubah) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsPPXz5YBn140-YHJOhkcc9oipgBgifIg",
+      authDomain: "embeddedsystem-21738.firebaseapp.com",
+      databaseURL: "https://embeddedsystem-21738-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "embeddedsystem-21738",
+      storageBucket: "embeddedsystem-21738.firebasestorage.app",
+      messagingSenderId: "661357037952",
+      appId: "1:661357037952:web:c7ad9c857a4f45f0855965"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function kirim() {
+      // ... (Fungsi kirim tetap sama)
+      let id = document.getElementById("id").value.replace(/\s+/g, "").toUpperCase();
+      let nik = document.getElementById("nik").value;
+      let nama = document.getElementById("nama").value;
+      let kamar = document.getElementById("kamar").value;
+      let status = document.getElementById("status");
+
+      if (id === "" || nik === "" || nama === "" || kamar === "") {
+        status.innerHTML = "Semua data harus diisi!";
+        status.style.color = "var(--primary-color)";
+        return;
+      }
+
+      let dataObject = {
+          kamar: "Kamar" + kamar,
+          nik: nik,
+          nama: nama,
+          timestamp: new Date().toISOString()
+      };
+      
+      let dataLine = JSON.stringify(dataObject);
+
+      db.ref("reservasi/" + id).set(dataLine)
+        .then(() => {
+          status.innerHTML = "Registrasi Kamar Berhasil! ID Anda: " + id;
+          status.style.color = "green";
+
+          document.getElementById("id").value = "";
+          document.getElementById("nik").value = "";
+          document.getElementById("nama").value = "";
+          document.getElementById("kamar").value = "";
+        })
+        .catch((error) => {
+          status.innerHTML = "Error saat mengirim data: " + error.message;
+          status.style.color = "red";
+        });
+    }
+
+    // --- Bagian NFC (Baru) ---
+
+    async function scanNFC() {
+      const nfcStatus = document.getElementById('nfc-status');
+      const idInput = document.getElementById('id');
+
+      // 1. Cek Kompatibilitas
+      if (!('NDEFReader' in window)) {
+        nfcStatus.innerHTML = '<span style="color: red;">Perhatian: Web NFC tidak didukung di perangkat atau browser ini.</span>';
+        nfcStatus.style.color = 'red';
+        return;
+      }
+
+      try {
+        nfcStatus.innerHTML = '<span style="color: blue;">Siap scanning... Dekatkan kartu NFC/KTP Anda ke perangkat.</span>';
+        nfcStatus.style.color = 'blue';
+
+        const ndef = new NDEFReader();
+        
+        // Memulai proses scan
+        await ndef.scan();
+
+        // 2. Event Listener saat Kartu Terdeteksi
+        ndef.onreading = event => {
+          // Asumsi: UID atau serial number disimpan sebagai ID KTP
+          // Di Web NFC API standar, ID unik dari tag (serial number/UID) bisa diakses melalui event.serialNumber
+          const serialNumber = event.serialNumber.toUpperCase();
+
+          if (serialNumber) {
+            idInput.value = serialNumber;
+            nfcStatus.innerHTML = '<span style="color: green;">✔ Scan Berhasil! ID KTP terisi otomatis.</span>';
+            ndef.onreading = null; // Hentikan listening setelah berhasil
+          } else {
+             // Fallback jika serialNumber tidak terdeteksi (meskipun kartu terbaca)
+            idInput.value = '';
+            nfcStatus.innerHTML = '<span style="color: orange;">Scan berhasil, namun tidak dapat membaca serial number.</span>';
+          }
+        };
+
+        // 3. Event Listener untuk Error
+        ndef.onerror = error => {
+          nfcStatus.innerHTML = `<span style="color: red;">Error NFC: ${error.message}</span>`;
+        };
+
+      } catch (error) {
+        // Penanganan error saat mencoba memulai scan (misal: izin ditolak)
+        let errorMessage = 'Gagal memulai scanning. Pastikan fitur NFC aktif dan izin diberikan.';
+        if (error.name === 'NotAllowedError') {
+             errorMessage = 'Izin NFC ditolak oleh pengguna. Mohon izinkan akses NFC.';
+        }
+        nfcStatus.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
+      }
+    }
+</script>
+
+</body>
+</html>
