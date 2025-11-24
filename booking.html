@@ -102,10 +102,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- Fungsi Kirim Data ke Firebase ---
+    // --- Fungsi Kirim Data ke Firebase (Diperbarui untuk String Daftar Kustom) ---
     function kirim() {
       let rawId = document.getElementById("id").value;
-      let id = rawId.replace(/\s+/g, "").toUpperCase(); 
+      let id = rawId.replace(/\s+/g, "").toUpperCase(); // ID sebagai Key
       let nik = document.getElementById("nik").value;
       let nama = document.getElementById("nama").value;
       let kamarValue = document.getElementById("kamar").value;
@@ -119,18 +119,22 @@
         return;
       }
       
-      let namaUpperCase = nama.toUpperCase();
+      let namaUpperCase = nama.toUpperCase(); // Mengubah nama menjadi huruf kapital seperti contoh
 
+      // 1. MEMBENTUK ARRAY DENGAN ELEMEN STRING
       let dataElements = [
-          kamarText,
-          id, 
-          nik,
-          namaUpperCase
+          kamarText, // Contoh: Kamar1
+          id,        // Contoh: D238452E
+          nik,       // Contoh: 123456789
+          namaUpperCase // Contoh: HANDOKO
       ];
 
+      // 2. MENGGABUNGKAN ELEMEN MENJADI STRING DENGAN FORMAT YANG DIINGINKAN
+      // Hasil: "[Kamar1, D238452E, 123456789, HANDOKO]"
       let dataLine = '[' + dataElements.join(', ') + ']';
 
-      // Simpan STRING dataLine ke Firebase di bawah Key ID
+      // 3. Simpan STRING dataLine ke Firebase di bawah Key ID
+      // Ini akan menghasilkan: { D238452E: "[Kamar1, D238452E, ...]" }
       db.ref(id).set(dataLine)
         .then(() => {
           status.innerHTML = "Registrasi Kamar Berhasil! ID Anda: " + id;
@@ -147,66 +151,50 @@
         });
     }
 
-    // --- Fungsi Scan NFC (Menggunakan Bridge Native untuk KTP-el) ---
+    // --- Fungsi Scan NFC ---
     async function scanNFC() {
       const nfcStatus = document.getElementById('nfc-status');
       const idInput = document.getElementById('id');
 
-      // 1. Cek Lingkungan (Bridge Check)
-      // Asumsi: MyNFCPlugin adalah plugin yang tersedia di environment Native (Capacitor/Cordova)
-      if (typeof MyNFCPlugin === 'undefined') {
-        nfcStatus.innerHTML = '<span style="color: red;">❌ Gagal: Ini adalah kode Web standar. Scan KTP-el memerlukan Aplikasi Native (Hybrid App).</span>';
-        
-        // --- Fallback ke Web NFC API Standar (Hanya untuk tag non-KTP) ---
-        if (!('NDEFReader' in window)) {
-            nfcStatus.innerHTML += '<br>Web NFC juga tidak didukung.';
-            return;
-        }
-        
-        try {
-            nfcStatus.innerHTML = '<span style="color: blue;">Siap scanning (Hanya Tag Non-KTP)... Dekatkan kartu.</span>';
-            const ndef = new NDEFReader();
-            await ndef.scan();
-
-            ndef.onreading = event => {
-              const rawSerialNumber = event.serialNumber;
-              if (rawSerialNumber) {
-                const cleanID = rawSerialNumber.replace(/:/g, "").toUpperCase(); 
-                idInput.value = cleanID;
-                nfcStatus.innerHTML = '<span style="color: green;">✔ Scan Berhasil! ID Tag terisi otomatis.</span>';
-              } else {
-                nfcStatus.innerHTML = '<span style="color: orange;">Tag terbaca, tapi Serial Number tidak tersedia.</span>';
-              }
-            };
-        } catch (error) {
-             nfcStatus.innerHTML = `<span style="color: red;">Error Web NFC: ${error.message}</span>`;
-        }
-
-        return; 
-        // --- Akhir Fallback ---
+      if (!('NDEFReader' in window)) {
+        nfcStatus.innerHTML = '<span style="color: red;">Perhatian: Web NFC tidak didukung di perangkat atau browser ini.</span>';
+        nfcStatus.style.color = 'red';
+        return;
       }
-      
-      // 2. Lingkungan Native Dideteksi (Pemanggilan Plugin)
+
       try {
-        nfcStatus.innerHTML = '<span style="color: blue;">🔍 Siap scanning... Memanggil Plugin Native untuk KTP-el.</span>';
+        nfcStatus.innerHTML = '<span style="color: blue;">Siap scanning... Dekatkan kartu NFC/KTP Anda ke perangkat.</span>';
+        nfcStatus.style.color = 'blue';
 
-        // Ini adalah panggilan yang akan dieksekusi oleh kode Native
-        // Asumsi: Fungsi scanKTP() akan menggunakan API Native (IsoDep) untuk mendapatkan UID.
-        const result = await MyNFCPlugin.scanKTP(); 
-        
-        // Data yang dikembalikan dari kode Native harus berupa objek { uid: "..." }
-        const cleanID = result.uid.replace(/:/g, "").toUpperCase();
+        const ndef = new NDEFReader();
+        await ndef.scan();
 
-        if (cleanID) {
+        ndef.onreading = event => {
+          const rawSerialNumber = event.serialNumber;
+          
+          let cleanID = '';
+          if (rawSerialNumber) {
+            cleanID = rawSerialNumber.replace(/:/g, "").toUpperCase(); 
+            
             idInput.value = cleanID;
-            nfcStatus.innerHTML = '<span style="color: green;">✅ Scan KTP-el Berhasil melalui Bridge Native.</span>';
-        } else {
-            nfcStatus.innerHTML = '<span style="color: orange;">Gagal mendapatkan UID dari KTP-el.</span>';
-        }
+            nfcStatus.innerHTML = '<span style="color: green;">✔ Scan Berhasil! ID KTP terisi otomatis.</span>';
+            ndef.onreading = null;
+          } else {
+            idInput.value = '';
+            nfcStatus.innerHTML = '<span style="color: orange;">Scan berhasil, namun tidak dapat membaca serial number.</span>';
+          }
+        };
+
+        ndef.onerror = error => {
+          nfcStatus.innerHTML = `<span style="color: red;">Error NFC: ${error.message}</span>`;
+        };
 
       } catch (error) {
-        // Error dari Plugin Native (izin, NFC mati, atau gagal komunikasi APDU)
-        nfcStatus.innerHTML = `<span style="color: red;">🔥 Error Plugin KTP-el: ${error.message}</span>`;
+        let errorMessage = 'Gagal memulai scanning. Pastikan fitur NFC aktif dan izin diberikan.';
+        if (error.name === 'NotAllowedError') {
+             errorMessage = 'Izin NFC ditolak oleh pengguna. Mohon izinkan akses NFC.';
+        }
+        nfcStatus.innerHTML = `<span style="color: red;">${errorMessage}</span>`;
       }
     }
 </script>
