@@ -1,0 +1,76 @@
+/* css/style.css */
+
+/* Warna Dasar yang Soft dan Elegan */
+:root {
+    --primary-color: #A0522D; /* Sienna - Cokelat Tanah Elegan */
+    --secondary-color: #F5F5DC; /* Beige - Krem lembut */
+    --light-bg: #FAF9F6; /* Off-White - Latar Belakang Bersih */
+    --dark-text: #36454F; /* Charcoal - Teks Gelap Profesional */
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--light-bg);
+    color: var(--dark-text);
+    padding-top: 70px; /* Jarak untuk fixed navbar */
+}
+
+/* Navbar Styling */
+.navbar {
+    background-color: var(--secondary-color) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+.navbar-brand, .nav-link {
+    font-family: 'Playfair Display', serif;
+    color: var(--dark-text) !important;
+    transition: color 0.3s;
+}
+.nav-link:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Heading Styling */
+h1, h2, h3, .display-4 {
+    font-family: 'Playfair Display', serif;
+    color: var(--primary-color);
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(160, 82, 45, 0.1);
+}
+
+/* Button Styling */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: background-color 0.3s, transform 0.2s;
+}
+.btn-primary:hover {
+    background-color: #8B4513; /* Darker Sienna */
+    border-color: #8B4513;
+    transform: translateY(-2px);
+}
+
+/* Form Control Styling */
+.form-control, .form-select {
+    border-radius: 8px;
+    border-color: #D3D3D3;
+}
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(160, 82, 45, 0.25);
+    border-color: var(--primary-color);
+}
+
+/* Jumbotron/Hero Section (Hanya untuk Beranda) */
+.hero-section {
+    background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('https://picsum.photos/1920/600?random=1'); /* Placeholder image */
+    background-size: cover;
+    background-position: center;
+    padding: 100px 0;
+    text-align: center;
+    border-bottom: 5px solid var(--primary-color);
+    margin-top: -70px; /* Untuk menutupi padding body */
+}
